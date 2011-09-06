@@ -46,25 +46,28 @@ public class Translator {
 				}
 				
 				case Declaration: {
-					switch (chr) {
-						/** reserved for wildcard declaration 
-						 * 	which will be used for things like:
-						 * 	
-						 * 	* map = ConcurrentHashMap<String, Vector<String>>();
-						 * 
-						 * 			to
-						 * 
-						 * 	ConcurrentHashMap<String, Vector<String>> map =
-						 * 						ConcurrentHashMap<String, Vector<String>>();
-						 */
-						case '*': {
-							break;
-						}
-						
-						
-					}
+					translateDeclarationStatements(chr, output);
 					break;
 				}
+			}
+		}
+	}
+
+	private static void translateDeclarationStatements(char chr,
+			StringBuilder output) {
+		switch (chr) {
+			/** reserved for wildcard declaration 
+			 * 	which will be used for things like:
+			 * 	
+			 * 	* map = ConcurrentHashMap<String, Vector<String>>();
+			 * 
+			 * 			to
+			 * 
+			 * 	ConcurrentHashMap<String, Vector<String>> map =
+			 * 						ConcurrentHashMap<String, Vector<String>>();
+			 */
+			case '*': {
+				break;
 			}
 		}
 	}
@@ -89,29 +92,30 @@ public class Translator {
 				break;
 			}
 			
-		/** static */
-		case '^': {
-			output.append("static ");
-			break;
-		}
+			/** static */
+			case '^': {
+				output.append("static ");
+				break;
+			}
+				
+			/** final */
+			case '!': {
+				output.append("final ");
+				break;
+			}
 			
-		/** final */
-		case '!': {
-			output.append("final ");
-			break;
-		}
-		
-		/** ignore spaces for now, we'll consider:
-		 * 	!^+  ==  ! ^ +
-		 */
-		case ' ': {
-			break;
-		}
-			
-		/** this isn't a visibility declaration, advance the state */
-		default: {
-			output.append(chr);
-			rstate_ = READER_STATE.Declaration;
+			/** ignore spaces for now, we'll consider:
+			 * 	!^+  ==  ! ^ +
+			 */
+			case ' ': {
+				break;
+			}
+				
+			/** this isn't a visibility declaration, advance the state */
+			default: {
+				output.append(chr);
+				rstate_ = READER_STATE.Declaration;
+			}
 		}
 	}
 }
