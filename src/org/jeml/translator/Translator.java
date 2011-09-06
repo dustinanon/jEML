@@ -32,46 +32,86 @@ public class Translator {
 		final int length = line.length();
 		
 		int c = 0;
+		char chr = '\0';
 		while (c < length) {
+			chr = line.charAt(c);
+			
 			switch (rstate_) {
-				case Visibility:
-					switch (line.charAt(c)) {
-						/** private */
-						case '-':
-							output.append("private ");
-							break;
-							
-						/** public */
-						case '+':
-							output.append("public ");
-							break;
-							
-						/** protected */
-						case '#':
-							output.append("protected ");
-							break;
-							
-						/** static */
-						case '^':
-							output.append("static ");
-							break;
-							
-						/** final */
-						case '!':
-							output.append("final ");
-							break;
-						
-						/** this isn't a visibility declaration, advance the state */
-						default:
-							output.append("private ");
-							output.append(line.charAt(c));
-							rstate_ = READER_STATE.Declaration;
-					}
-					
+				/** translate visibility statements */
+				case Visibility: {
+					translateVisibilityStatements(chr, output);
 					c++;
 					
 					break;
+				}
+				
+				case Declaration: {
+					switch (chr) {
+						/** reserved for wildcard declaration 
+						 * 	which will be used for things like:
+						 * 	
+						 * 	* map = ConcurrentHashMap<String, Vector<String>>();
+						 * 
+						 * 			to
+						 * 
+						 * 	ConcurrentHashMap<String, Vector<String>> map =
+						 * 						ConcurrentHashMap<String, Vector<String>>();
+						 */
+						case '*': {
+							break;
+						}
+						
+						
+					}
+					break;
+				}
 			}
+		}
+	}
+
+	private static void translateVisibilityStatements(char chr, StringBuilder output) {
+		switch (chr) {
+			/** private */
+			case '-': {
+				output.append("private ");
+				break;
+			}
+			
+			/** public */
+			case '+': {
+				output.append("public ");
+				break;
+			}
+			
+			/** protected */
+			case '#': {
+				output.append("protected ");
+				break;
+			}
+			
+		/** static */
+		case '^': {
+			output.append("static ");
+			break;
+		}
+			
+		/** final */
+		case '!': {
+			output.append("final ");
+			break;
+		}
+		
+		/** ignore spaces for now, we'll consider:
+		 * 	!^+  ==  ! ^ +
+		 */
+		case ' ': {
+			break;
+		}
+			
+		/** this isn't a visibility declaration, advance the state */
+		default: {
+			output.append(chr);
+			rstate_ = READER_STATE.Declaration;
 		}
 	}
 }
