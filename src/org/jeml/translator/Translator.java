@@ -11,6 +11,10 @@ public class Translator {
 		Visibility, Declaration, MethodCall, Block, CommentBlock
 	}
 	
+	private static enum TOKEN_TYPE {
+	    Visibility, Type, Literal, Operator
+	}
+	
 	private static READER_STATE 		rstate_ 	= READER_STATE.Visibility;
 	
 	public static void translateFile(File input, File output) throws FileNotFoundException {
@@ -32,9 +36,71 @@ public class Translator {
 	private static void translate(final String line, final StringBuilder output) {
 		final int length = line.length();
 		
+		final String[] tokens = line.split(" ");
+		
 		int c = 0;
 		char chr = '\0';
 		
+		
+		for (String token : tokens) {
+		    switch (rstate_) {
+		        case Visibility: {
+		            /** look at each character in the first token to test for and translate visibility */
+		            while (c < token.length() && rstate_ == READER_STATE.Visibility) {
+    		            switch (token.charAt(c)) {
+    		                /** private */
+        		            case  '-': {
+        		                output.append("private ");
+        		                break;
+        		            }
+    		                
+        		            /** public */
+        		            case '+': {
+        		                output.append("public ");
+        		                break;
+        		            }
+        		            
+        		            /** protected */
+        		            case '#': {
+        		                output.append("protected ");
+        		                break;
+        		            }
+        		            
+        		            /** static */
+        		            case '^': {
+        		                output.append("static ");
+        		                break;
+        		            }
+        		            
+        		            /** final */
+        		            case '!': {
+        		                output.append("final ");
+        		                break;
+        		            }
+        		            
+        		            /** the rest are just to test if they actually spelled it out */
+        		            default: {
+        		                if (token == "public" || token == "private" || token == "protected" ||
+        		                    token == "static" || token == "final") {
+        		                    output.append(token);
+        		                    output.append(' ');
+        		                } else {
+        		                    /** encountered a character that is not a valid symbol, so move onto the declaration */
+        		                    rstate_ = READER_STATE.Declaration;
+        		                }
+        		            }
+    		            }    		            
+		            }
+		            
+		            break;
+		        }
+		        
+		        /** parse the declaration expression */
+		        case Declaration: {
+		            
+		        }
+		    }
+		}
 		
 		
 		/** loop through each character in the line
@@ -94,7 +160,7 @@ public class Translator {
 	}
 
 	private static enum DECLARATION_TYPE {
-		Class, Method, Variable
+		Class, Method, Variable, Enum
 	}
 	
 	private static enum DECLARATION_STATE {
@@ -104,11 +170,21 @@ public class Translator {
 	private static DECLARATION_STATE 	decstate_ 	= DECLARATION_STATE.Type;
 	private static DECLARATION_TYPE		dectype_ 	= DECLARATION_TYPE.Class; //assume that the first declaration we find will be a class?
 	
-	private static void translateDeclarationStatements(String string,
+	private static void translateDeclarationStatements(String line,
 			StringBuilder output) {
 		
+	    /** trim off a leading space, if there is one */
+	    if (line.charAt(0) == ' ') line = line.substring(1);
+	    
 		switch (decstate_) {
 			case Type: {
+			    /** find the next space, that will be the end of the type declaration */
+			    final String type = line.substring(0, line.indexOf(' '));
+			    
+			    if (type == "class") dectype_ = DECLARATION_TYPE.Class;
+			    else if (type == "enum") dectype_ = DECLARATION_TYPE.Enum;
+			    
+			    /** bit of a problem here since variables and assignments kind of look like methods from the start */
 				break;
 			}
 			
